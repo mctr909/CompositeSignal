@@ -1,11 +1,11 @@
 #define CHROMA_BASE_LEVEL  0.3
-#define CHROMA_SYNC_CYCLES 10
 
 class Chroma {
 private:
     const int    CYCLE_PER_SAMPLES = 4;
-    const int    BURST_PAD = 30;
-    const int    BURST_END = BURST_PAD + CYCLE_PER_SAMPLES * CHROMA_SYNC_CYCLES;
+    const int    SYNC_CYCLES = 8;
+    const int    BURST_PAD = 16;
+    const int    BURST_END = BURST_PAD + CYCLE_PER_SAMPLES * SYNC_CYCLES;
     const int    SYNC_END = BURST_END + BURST_PAD;
     const double SYNC_LIMIT = 0.050625; // (CHROMA_BASE_LEVEL*0.75)^2
     const double PI2 = 6.283185307;
@@ -40,8 +40,8 @@ public:
         m_sync_cycles = 0;
     }
 
-    inline bool is_sync_end() {
-        return SYNC_END <= m_sync_samples;
+    inline bool is_sync() {
+        return m_sync_samples < SYNC_END;
     }
 
     inline double step() {
@@ -95,7 +95,7 @@ public:
 
         m_rms = m_rms * 0.9 + signal * 0.1;
 
-        if (is_sync_end()) {
+        if (SYNC_CYCLES <= m_sync_cycles) {
             double current_re = m_osc_re;
             double current_im = m_osc_im;
             m_osc_re = current_re * m_delta_re - current_im * m_delta_im;
@@ -115,7 +115,7 @@ public:
         m_sync_samples++;
         m_diff_delay = diff;
 
-        if (is_sync_end()) {
+        if (SYNC_CYCLES <= m_sync_cycles) {
             double rad = PI2 * (m_sync_cycles - 1.0) / m_sync_samples;
             double rad_2 = rad * rad;
             m_delta_re = INV_FACT8;

@@ -16,23 +16,22 @@ int main() {
     Chroma* c = new Chroma();
     c->sync();
 
-    int span = 0;
-    for (int i = 0; i < 1000; i++) {
-        if (c->is_sync_end()) {
-            span++;
-        } else {
+    int data_count = 0;
+    for (int i = 0; i < 512; i++) {
+        if (c->is_sync()) {
             fprintf(fp, "%.3f\n", c->step());
             continue;
         }
 
-        if (span < 300) {
-            int f = 24 * span / 300;
-            double th = 8 * atan(1) * f / 24.0;
-            c->m_re = cos(th) * (0.5 + 4 * f / 24) / 4.5;
-            c->m_im = sin(th) * (0.5 + 4 * f / 24) / 4.5;
+        if (data_count < 256) {
+            int f = 32 * data_count / 256;
+            double th = 8 * atan(1) * f / 32.0;
+            c->m_re = cos(th);
+            c->m_im = sin(th);
+            data_count++;
         } else {
             c->sync();
-            span = 0;
+            data_count = 0;
         }
 
         fprintf(fp, "%.3f\n", c->step());
